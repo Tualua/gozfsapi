@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/oapi-codegen/oapi-codegen/HEAD/configuration-schema.json
+package: server
+output: server.gen.go
+additional-imports:
+  - package: github.com/Tualua/gozfsapi/internal/models
+    alias: .
+generate:
+  echo-server: true
+  embedded-spec: true
