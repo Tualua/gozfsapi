@@ -8,6 +8,7 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"fmt"
+	"net/http"
 	"net/url"
 	"path"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	. "github.com/Tualua/gozfsapi/internal/models"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
+	"github.com/oapi-codegen/runtime"
 )
 
 // ServerInterface represents all server handlers.
@@ -22,9 +24,9 @@ type ServerInterface interface {
 
 	// (GET /readyz)
 	GetReadyz(ctx echo.Context) error
-	// Get ZFS datasets
-	// (GET /zfs/get)
-	GetZfsGet(ctx echo.Context) error
+	// List ZFS datasets
+	// (GET /zfs/list)
+	ListZfsDatasets(ctx echo.Context, params ListZfsDatasetsParams) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -41,12 +43,21 @@ func (w *ServerInterfaceWrapper) GetReadyz(ctx echo.Context) error {
 	return err
 }
 
-// GetZfsGet converts echo context to params.
-func (w *ServerInterfaceWrapper) GetZfsGet(ctx echo.Context) error {
+// ListZfsDatasets converts echo context to params.
+func (w *ServerInterfaceWrapper) ListZfsDatasets(ctx echo.Context) error {
 	var err error
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListZfsDatasetsParams
+	// ------------- Optional query parameter "type" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "type", ctx.QueryParams(), &params.Type)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter type: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetZfsGet(ctx)
+	err = w.Handler.ListZfsDatasets(ctx, params)
 	return err
 }
 
@@ -79,22 +90,21 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/readyz", wrapper.GetReadyz)
-	router.GET(baseURL+"/zfs/get", wrapper.GetZfsGet)
+	router.GET(baseURL+"/zfs/list", wrapper.ListZfsDatasets)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7RUwW7bMAz9FYHbMYjdtSffOmwNBgzD0AA7pOhBs+lEhS2pFB3ADfzvA2WnqWsPzYD1",
-	"FEUkHx/fo3yA3NXeWbQcIDtAyHdY63j8SuToFoN3NqBceHIeiQ3GMEpYDgWGnIxn4yxkfZWqMQS9RVgA",
-	"tx4hg8Bk7Ba67vnG/X7AnKFbwOZm/UWzDsgr5Ft8nPayusZpqx+6RuVKVfTFip0iZDK4n2m8eAU5hvpu",
-	"AgvUKeclmiodKd7hsRMswDDWEWfSZrjQRLqN8xI+NoawgOyuH2RE5f5tQYKfKjL+98zmI2EJGXxITq4m",
-	"g6XJCfUnOf8m1bM5RrR/tOyFmEfN2znP9rpqZmB+yfX5OPMm9NjT2STd2NJFdw1XEls5tTa1r1Btbtbq",
-	"2hupRwo9nYtlKmSdR6u9gQwul+nyUnzWvItqJIS6aJ/kuEWWH+GqZZxvheCLzzFDqPZPLhZ+StPp+Guk",
-	"vclRmaAirnDuFpA8lSEZ4P/WZVOGVVxgEQQDf3ZFK4m5s4w21mjvK5PHquQhSMPjZ+H8DRsecjeWnqnB",
-	"bn7A9+gffE9gLN61qobHLlYOyxPEv6v06r9RGX88Z2gMRJV1rErX2CKuaWjqWlPbe/WKYIwjydpBdneA",
-	"hirIYMfsQ5Yk2ptlH10yBk72F9Ddd38CAAD//0PUYp3fBQAA",
+	"H4sIAAAAAAAC/4xSPW/bUAz8KwLb8cFymk1bgCJFgU51pwQeaJmKmbyvPFIGFEP/vaAk103gAt30dOTx",
+	"eMcTtCnkFCmqQHMCaQ8UcPp8uN98RUUhtVcuKVNRpgnDI7LHnSd76JAJGhAtHJ9gdBBSHzUnjnoVjhiu",
+	"9/VC+yvA6KDQa8/F0Me5fevOVWn3TK1a+0Xwrwk6wZ467L1CA+g9OKDYB6Po2JMMohTAgUTMckgKDo7J",
+	"94He/9ul9BKwvICbSC6D/8gbHXDs0qSc1TyBb6nacMieqof7TXWX2cipCKcIDdys1qY3ZYqYGRq4Xa1X",
+	"t+Agox4mf+tCuB/e7PNp9t/cR+UUv++Nn/TnXGHeSE5R5mC+rNfz4tIWzjrP21A5cksVSzXxmubRQf3W",
+	"Se1Z9J9jfrDoQyeLqzIpLBhIqQg0jydgo3/tqQxwznW2xy2XZJyfC3XQwKf6cmr1cmf1h8zGcXt9oTZF",
+	"pfmeMGfP7SSyfhZb8PTXMFYK8v9TLYclTywFhznO9/bdVWZSlbopzP3ZDCuUPgQsw2LVR9wKqBzPZvXF",
+	"QwMH1SxNXWPm1YyulETr4w2M2/F3AAAA//+/GnL+kAMAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

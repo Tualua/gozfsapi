@@ -1,7 +1,7 @@
 package zfs
 
 import (
-	"log"
+	"slices"
 	"strings"
 )
 
@@ -33,14 +33,32 @@ func GetDataset(name string) (*Dataset, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	ds := &Dataset{Name: name}
-	log.Println(len(out))
-	// for _, line := range out {
-	// 	if err := ds.parseLine(line); err != nil {
-	// 		return nil, err
-	// 	}
-	// }
-
+	data := out[0]
+	ds := &Dataset{
+		Name: data[0],
+		Origin: parseString(data[1]),
+		Used: parseUint64(data[2]),
+		Avail: parseUint64(data[3]),
+		Mountpoint: parseString(data[4]),
+		Compression: parseString(data[5]),
+		Type: parseString(data[6]),
+		Volsize: parseUint64(data[7]),
+		Quota: parseUint64(data[8]),
+		Referenced: parseUint64(data[9]),
+		Written: parseUint64(data[10]),
+		Logicalused: parseUint64(data[11]),
+		Usedbydataset: parseUint64(data[12]),
+	}
 	return ds, nil
+}
+
+func ListDatasets(t string) []string {
+	if t == "" {
+		t = "all"
+	}
+	out, err := zfsOutput("list", "-Hp", "-o", "name", "-t", t)
+	if err != nil || len(out) == 0 {
+		return nil
+	}
+	return slices.Concat(out...)
 }

@@ -2,6 +2,7 @@ package zfs
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os/exec"
 	"strings"
@@ -32,6 +33,10 @@ func (c *command) Run(arg ...string) ([][]string, error) {
 	// assume if you passed in something for stdout, that you know what to do with it
 	if c.Stdout != nil {
 		return nil, nil
+	}
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("command run error: %s", stderr.String())
 	}
 
 	lines := strings.Split(stdout.String(), "\n")

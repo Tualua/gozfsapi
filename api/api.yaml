@@ -10,30 +10,60 @@ paths:
       responses:
         "200":
           description: Service is ready
-  /zfs/get:
+  /zfs/list:
     get:
-      summary: Get ZFS datasets
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ZFSDatasetGetReq"
+      summary: List ZFS datasets
+      operationId: listZfsDatasets
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/ZFSDatasetType"
       responses:
-        "404":
-          description: Dataset not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
         "200":
           description: A list of ZFS datasets
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ZFSDatasetGetResp"
+                type: array
+                items:
+                  $ref: "#/components/schemas/ZFSDataset"
+  # /zfs/get:
+  #   get:
+  #     summary: Get ZFS datasets
+  #     operationId: getZfsDatasets
+  #     requestBody:
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: "#/components/schemas/ZFSDatasetGetReq"
+  #     responses:
+  #       "404":
+  #         description: Dataset not found
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/ErrorResponse"
+  #       "200":
+  #         description: A list of ZFS datasets
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: "#/components/schemas/ZFSDatasetGetResp"
 components:
   schemas:
+    ZFSDatasetType:
+      type: string
+      default: all
+      enum:
+        - filesystem
+        - snapshot
+        - volume
+        - snapshot
+        - bookmark
+        - all
     ZFSDatasetProp:
       type: object
       required:
@@ -71,6 +101,8 @@ components:
             $ref: "#/components/schemas/ZFSDatasetProp"
     ZFSDataset:
       type: object
+      required:
+        - name
       properties:
         name:
           type: string
