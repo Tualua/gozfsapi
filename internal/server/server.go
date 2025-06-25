@@ -46,3 +46,22 @@ func (s *ApiServer) ListZfsDatasets(ctx echo.Context, params ListZfsDatasetsPara
 func (s *ApiServer) GetReadyz(ctx echo.Context) error {
 	return ctx.String(http.StatusOK, "Ready")
 }
+
+func (s *ApiServer) CloneZfsDataset(ctx echo.Context) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	var req CloneZfsDatasetJSONRequestBody
+	if err := ctx.Bind(&req); err != nil {
+		s.Log.Error("Failed to bind request", zap.Error(err))
+		return ctx.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request"})
+	}
+
+	if err := zfs.CloneDataset(req.Source, req.Target); err != nil {
+		s.Log.Error("Failed to clone dataset", zap.String("source", req.Source), zap.String("target", req.Target), zap.Error(err))
+		return ctx.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to clone dataset"})
+	}
+
+	s.Log.Info("Cloned ZFS dataset", zap.String("source", req.Source), zap.String("target", req.Target))
+	return ctx.NoContent(http.StatusNoContent)
+}

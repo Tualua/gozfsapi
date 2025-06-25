@@ -24,6 +24,9 @@ type ServerInterface interface {
 
 	// (GET /readyz)
 	GetReadyz(ctx echo.Context) error
+	// Clone a ZFS dataset
+	// (POST /zfs/clone)
+	CloneZfsDataset(ctx echo.Context) error
 	// List ZFS datasets
 	// (GET /zfs/list)
 	ListZfsDatasets(ctx echo.Context, params ListZfsDatasetsParams) error
@@ -40,6 +43,15 @@ func (w *ServerInterfaceWrapper) GetReadyz(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetReadyz(ctx)
+	return err
+}
+
+// CloneZfsDataset converts echo context to params.
+func (w *ServerInterfaceWrapper) CloneZfsDataset(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.CloneZfsDataset(ctx)
 	return err
 }
 
@@ -90,6 +102,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.GET(baseURL+"/readyz", wrapper.GetReadyz)
+	router.POST(baseURL+"/zfs/clone", wrapper.CloneZfsDataset)
 	router.GET(baseURL+"/zfs/list", wrapper.ListZfsDatasets)
 
 }
@@ -97,14 +110,17 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/4xSPW/bUAz8KwLb8cFymk1bgCJFgU51pwQeaJmKmbyvPFIGFEP/vaAk103gAt30dOTx",
-	"eMcTtCnkFCmqQHMCaQ8UcPp8uN98RUUhtVcuKVNRpgnDI7LHnSd76JAJGhAtHJ9gdBBSHzUnjnoVjhiu",
-	"9/VC+yvA6KDQa8/F0Me5fevOVWn3TK1a+0Xwrwk6wZ467L1CA+g9OKDYB6Po2JMMohTAgUTMckgKDo7J",
-	"94He/9ul9BKwvICbSC6D/8gbHXDs0qSc1TyBb6nacMieqof7TXWX2cipCKcIDdys1qY3ZYqYGRq4Xa1X",
-	"t+Agox4mf+tCuB/e7PNp9t/cR+UUv++Nn/TnXGHeSE5R5mC+rNfz4tIWzjrP21A5cksVSzXxmubRQf3W",
-	"Se1Z9J9jfrDoQyeLqzIpLBhIqQg0jydgo3/tqQxwznW2xy2XZJyfC3XQwKf6cmr1cmf1h8zGcXt9oTZF",
-	"pfmeMGfP7SSyfhZb8PTXMFYK8v9TLYclTywFhznO9/bdVWZSlbopzP3ZDCuUPgQsw2LVR9wKqBzPZvXF",
-	"QwMH1SxNXWPm1YyulETr4w2M2/F3AAAA//+/GnL+kAMAAA==",
+	"H4sIAAAAAAAC/6xUTU/cMBD9K9a0x2izlJ5yg7ZUlXpiOYH2YJIJa/AXnslKYZX/XtnOLixJS5G4RR77",
+	"zZv35mUHtTPeWbRMUO2A6g0amT5/hODCJZJ3ljAe+OA8BlaYyhjL8aNBqoPyrJyFKr8SBonkHUIB3HuE",
+	"CoiDsncwDAUEfOxUwAaqmxFkfbjmbu+xZhgKuL5YfdPO4iU+TnuT60KN0+ardC4ayZKQBTtRRwzRBmem",
+	"XApgGe6QpzhX6fyAY6VB0bogeIMZ8c3BRoaHFn8Z8XvuMJ1QbqXS8lanISe8jesse6csz5Yj39lCR5Hd",
+	"7g3u6fm/CV+lUpStlZ1mqEBqDQWg7UyEaJVG6okxyk5Weto4hgK2TncGj89unXswMjxAkUDWU2mHApRt",
+	"XWKuOGoCP51YKeM1iuuLlTjzKoJjoOzfyWIZ+TqPVnoFFZwulotTKMBL3iR9y4Cy6Z/i57gBUX0Z/f/V",
+	"RHzky3wjapMzkB5+WS5n9g7DVtUoFImEGzkPBZRPLZV5X6LBjmYapSW/bmm/CdkKJD53TR+v184yZqOl",
+	"91rV6W15T7HzPrDx63PAFir4VD4nuhzjXL5M03DsN4cOh8mQJx/Zej9b6nys3FjKqWoEdXWNRG2ndR8d",
+	"/JrV/hAix/+zGS7nshGj+IVQdiu1aoSXQRpkDJRyQp0xMvR744RM+9ccBhxN1yp7PbtbvxXxs+OU1vLQ",
+	"pLrZgYpsHjsMPezDnDNRvFvzFNRhWM9v8X/rqhgNvcfpQ4hlCLKfU/tMRJGEa18q+FrkKNXreryAYbsX",
+	"qwsaKtgwe6rKUnq1yNUFI3G5PYFhPfwJAAD//+IRblnmBgAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

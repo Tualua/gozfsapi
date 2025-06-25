@@ -29,6 +29,29 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ZFSDataset"
+  /zfs/clone:
+    post:
+      summary: Clone a ZFS dataset
+      operationId: cloneZfsDataset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ZFSCloneReq"
+      responses:
+        "201":
+          description: Dataset cloned successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZFSDataset"
+        "400":
+          description: Bad request, invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   # /zfs/get:
   #   get:
   #     summary: Get ZFS datasets
@@ -54,6 +77,18 @@ paths:
   #               $ref: "#/components/schemas/ZFSDatasetGetResp"
 components:
   schemas:
+    ZFSCloneReq:
+      type: object
+      required:
+        - source
+        - target
+      properties:
+        source:
+          type: string
+          description: Source dataset to clone from
+        target:
+          type: string
+          description: Target dataset name for the clone
     ZFSDatasetType:
       type: string
       default: all
@@ -61,7 +96,6 @@ components:
         - filesystem
         - snapshot
         - volume
-        - snapshot
         - bookmark
         - all
     ZFSDatasetProp:
@@ -114,6 +148,8 @@ components:
           type: string
     ErrorResponse:
       type: object
+      required:
+        - error
       properties:
         error:
           type: string

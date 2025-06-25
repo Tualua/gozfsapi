@@ -12,6 +12,21 @@ const (
 	Volume     ZFSDatasetType = "volume"
 )
 
+// ErrorResponse defines model for ErrorResponse.
+type ErrorResponse struct {
+	// Error Error message
+	Error string `json:"error"`
+}
+
+// ZFSCloneReq defines model for ZFSCloneReq.
+type ZFSCloneReq struct {
+	// Source Source dataset to clone from
+	Source string `json:"source"`
+
+	// Target Target dataset name for the clone
+	Target string `json:"target"`
+}
+
 // ZFSDataset defines model for ZFSDataset.
 type ZFSDataset struct {
 	Available  *string `json:"available,omitempty"`
@@ -27,3 +42,6 @@ type ZFSDatasetType string
 type ListZfsDatasetsParams struct {
 	Type *ZFSDatasetType `form:"type,omitempty" json:"type,omitempty"`
 }
+
+// CloneZfsDatasetJSONRequestBody defines body for CloneZfsDataset for application/json ContentType.
+type CloneZfsDatasetJSONRequestBody = ZFSCloneReq

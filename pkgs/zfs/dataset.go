@@ -1,6 +1,7 @@
 package zfs
 
 import (
+	"errors"
 	"slices"
 	"strings"
 )
@@ -35,18 +36,18 @@ func GetDataset(name string) (*Dataset, error) {
 	}
 	data := out[0]
 	ds := &Dataset{
-		Name: data[0],
-		Origin: parseString(data[1]),
-		Used: parseUint64(data[2]),
-		Avail: parseUint64(data[3]),
-		Mountpoint: parseString(data[4]),
-		Compression: parseString(data[5]),
-		Type: parseString(data[6]),
-		Volsize: parseUint64(data[7]),
-		Quota: parseUint64(data[8]),
-		Referenced: parseUint64(data[9]),
-		Written: parseUint64(data[10]),
-		Logicalused: parseUint64(data[11]),
+		Name:          data[0],
+		Origin:        parseString(data[1]),
+		Used:          parseUint64(data[2]),
+		Avail:         parseUint64(data[3]),
+		Mountpoint:    parseString(data[4]),
+		Compression:   parseString(data[5]),
+		Type:          parseString(data[6]),
+		Volsize:       parseUint64(data[7]),
+		Quota:         parseUint64(data[8]),
+		Referenced:    parseUint64(data[9]),
+		Written:       parseUint64(data[10]),
+		Logicalused:   parseUint64(data[11]),
 		Usedbydataset: parseUint64(data[12]),
 	}
 	return ds, nil
@@ -61,4 +62,24 @@ func ListDatasets(t string) []string {
 		return nil
 	}
 	return slices.Concat(out...)
+}
+
+func CloneDataset(source, target string) error {
+	if source == "" || target == "" {
+		return errors.New(ErrInvalidDataset)
+	}
+
+	if !strings.Contains(source, "@") {
+		return errors.New(ErrSourceNotSnapshot)
+	}
+	snapshots := ListDatasets("snapshot")
+	if !slices.Contains(snapshots, source) {
+		return errors.New(ErrSnapshotNotFound)
+	}
+	// Ensure the target dataset does not already exist.
+	if slices.Contains(ListDatasets("all"), target) {
+		return errors.New(ErrDatasetExists)
+	}
+	// Perform the clone operation.
+	return zfs("clone", source, target)
 }
